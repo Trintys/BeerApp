@@ -156,5 +156,5 @@ These are things a home-screen web app can and can't do. Check here before desig
 ## Open decisions
 
 - **Reveal & notification mechanism**: a temporary choice is in place (see "Reveal & notification"). The goal of a true one-click is to be revisited later. It doesn't affect screens or data structure.
-- **Build plan** (`docs/PLAN.md`): not written yet.
+- **Build plan** ([`docs/PLAN.md`](docs/PLAN.md)): drafted, needs review from both of us.
 - **App name on the home screen and icon.** We'll design them with the screens.

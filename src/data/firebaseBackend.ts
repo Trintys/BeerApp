@@ -24,6 +24,8 @@ import {
   writeBatch,
   type DocumentData,
   type Firestore,
+  type FirestoreError,
+  type Unsubscribe,
 } from 'firebase/firestore'
 import { EMULATOR_PORTS, EMULATOR_PROJECT_ID, firebaseConfig } from '../config/firebase'
 import { tidyName, toPersonId } from '../lib/names'
@@ -58,17 +60,23 @@ export function createFirebaseBackend({ useEmulators }: { useEmulators: boolean 
           return
         }
         // Signed in: we're a member as long as our device document exists.
-        stopDevice = onSnapshot(
-          doc(db, 'devices', user.uid),
-          (snapshot) => {
-            const personId = snapshot.get('personId')
-            onChange(
-              snapshot.exists() && typeof personId === 'string'
-                ? { state: 'member', uid: user.uid, personId }
-                : { state: 'guest' },
-            )
-          },
-          () => onChange({ state: 'guest' }),
+        // Right after joining, wait until the server has confirmed it; asking
+        // for members-only data before that would be refused.
+        stopDevice = keepListening((onError) =>
+          onSnapshot(
+            doc(db, 'devices', user.uid),
+            { includeMetadataChanges: true },
+            (snapshot) => {
+              if (snapshot.metadata.hasPendingWrites) return
+              const personId = snapshot.get('personId')
+              onChange(
+                snapshot.exists() && typeof personId === 'string'
+                  ? { state: 'member', uid: user.uid, personId }
+                  : { state: 'guest' },
+              )
+            },
+            onError,
+          ),
         )
       })
       return () => {
@@ -78,15 +86,24 @@ export function createFirebaseBackend({ useEmulators }: { useEmulators: boolean 
     },
 
     watchSeasons(onChange) {
-      return onSnapshot(collection(db, 'seasons'), (snapshot) => {
-        onChange(snapshot.docs.map((d) => toSeason(d.id, d.data())))
-      })
+      return keepListening((onError) =>
+        onSnapshot(
+          collection(db, 'seasons'),
+          (snapshot) => onChange(snapshot.docs.map((d) => toSeason(d.id, d.data()))),
+          onError,
+        ),
+      )
     },
 
     watchPeople(onChange) {
-      return onSnapshot(collection(db, 'people'), (snapshot) => {
-        onChange(snapshot.docs.map((d): Person => ({ id: d.id, displayName: d.get('displayName') })))
-      })
+      return keepListening((onError) =>
+        onSnapshot(
+          collection(db, 'people'),
+          (snapshot) =>
+            onChange(snapshot.docs.map((d): Person => ({ id: d.id, displayName: d.get('displayName') }))),
+          onError,
+        ),
+      )
     },
 
     async join(name, inviteCode) {
@@ -116,6 +133,34 @@ export function createFirebaseBackend({ useEmulators }: { useEmulators: boolean 
         console.warn('[tap] rejected by the server', error)
       })
     },
+  }
+}
+
+const LISTEN_RETRY_MS = 2000
+
+/**
+ * A Firestore listener that starts again after an error instead of stopping for
+ * good (Firestore ends a listener on its first error, e.g. a brief "not a member yet").
+ */
+function keepListening(start: (onError: (error: FirestoreError) => void) => Unsubscribe): Unsubscribe {
+  let stopped = false
+  let retryTimer: ReturnType<typeof setTimeout> | undefined
+  let stopListener: Unsubscribe = () => {}
+
+  const run = () => {
+    stopListener = start((error) => {
+      console.warn('[firestore] listener stopped, retrying', error.code)
+      retryTimer = setTimeout(() => {
+        if (!stopped) run()
+      }, LISTEN_RETRY_MS)
+    })
+  }
+  run()
+
+  return () => {
+    stopped = true
+    clearTimeout(retryTimer)
+    stopListener()
   }
 }
 

@@ -34,7 +34,7 @@ Each of these could change the design, so test them before building on top of th
 | E | **Security rules in the emulator** | The tap and counter rules in section 3 rely on two writes checking each other. | Rethink how the total is stored |
 
 **Results so far**
-- **E:** rules and tests written (7 Nov), **not run yet**: the AI sandbox can't download the Firestore Emulator. First person with Java 21 installed: run `npm run test:rules` and write the result here.
+- **E: passed (7 Nov).** All 27 rule tests pass in the emulator, so the tap and the +1 checking each other works. Also tried end to end on the emulator: two browsers see each other's taps live, a wrong invite code is refused, and taps made offline show at once and sync on reconnect (desktop Chrome; real phones are test D).
 
 Tests A to D need real phones, so do them on a bare deployed app rather than on the dev machine.
 
@@ -222,10 +222,11 @@ These are additions, not swaps, and are now listed in the README's stack.
 
 - **7 Nov 2026, Foundations part 1 (done, local commits):**
   - Project set up: Vite + React + TypeScript, `vite-plugin-pwa` (injectManifest, `src/sw.ts`), Firebase SDK, Vitest, Emulator config. Commands are in the README ("Development").
-  - `firestore.rules`: joining with an invite, Latin-only names, reserved admin name, taps (+1 only, own name, inside the season's dates, not in the future, season still open), Reveal steps (admin only), recap, time sync. Tests in `tests/rules` (not run yet, see test E).
+  - `firestore.rules`: joining with an invite, Latin-only names, reserved admin name, taps (+1 only, own name, inside the season's dates, not in the future, season still open), Reveal steps (admin only), recap, time sync. 27 tests in `tests/rules`, all passing (test E).
   - Data layer `src/data/` with a real (Firebase) and a fake backend; logic in `src/lib/` with unit tests (passing).
   - Plain screens: Join, Starts in…, Counter. Checked in a browser with the fake backend: joining, the Latin-only check and the live total all work.
-- **Next:** run the rule tests and try `npm run dev` against the emulator (needs Java 21), deploy rules + app to the live project, then tests A–D on real phones. After that: corrected time, Results/Recap, admin mode, `create-season`/`wipe`.
+- **7 Nov, later:** rule tests run and passing; fixed a bug found on the emulator (right after joining, the app asked for members-only data before the server had confirmed the join, and the live listeners gave up for good). Now it waits for the confirmation, and listeners retry after an error.
+- **Next:** deploy rules + app to the live project, then tests A–D on real phones. After that: corrected time, Results/Recap, admin mode, `create-season`/`wipe`.
 
 ---
 

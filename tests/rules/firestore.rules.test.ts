@@ -187,12 +187,13 @@ describe('tapping', () => {
 
     // Move the season into the past so its end is before "now".
     const hour = 60 * 60 * 1000
+    const endsAt = Date.now() - hour
     await setSeason(env, {
-      startsAt: Timestamp.fromMillis(Date.now() - 2 * hour),
-      endsAt: Timestamp.fromMillis(Date.now() - hour),
+      startsAt: Timestamp.fromMillis(endsAt - hour),
+      endsAt: Timestamp.fromMillis(endsAt),
     })
-    const atEnd = Timestamp.fromMillis(Date.now() - hour)
-    const justBeforeEnd = Timestamp.fromMillis(Date.now() - hour - 1)
+    const atEnd = Timestamp.fromMillis(endsAt)
+    const justBeforeEnd = Timestamp.fromMillis(endsAt - 1)
     await assertFails(commitTap(as('alice'), { uid: 'alice', personId: 'nikos', tappedAt: atEnd }))
     await assertSucceeds(commitTap(as('alice'), { uid: 'alice', personId: 'nikos', tappedAt: justBeforeEnd }))
   })

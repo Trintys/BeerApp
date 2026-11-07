@@ -227,7 +227,8 @@ These are additions, not swaps, and are now listed in the README's stack.
   - Plain screens: Join, Starts in…, Counter. Checked in a browser with the fake backend: joining, the Latin-only check and the live total all work.
 - **7 Nov, later:** rule tests run and passing; fixed a bug found on the emulator (right after joining, the app asked for members-only data before the server had confirmed the join, and the live listeners gave up for good). Now it waits for the confirmation, and listeners retry after an error.
 - **7 Nov, evening:** shorter invite link (`/j/<code>`, 10-character code). Rules and app **deployed** to the live project (https://happynewbeeer.web.app); invite created in the console.
-- **Next:** season documents in the live database (nothing to tap on until one exists), Billis joins first, then tests A–D on real phones. After that: corrected time, Results/Recap, admin mode, `create-season`/`wipe`.
+- **7 Nov, night:** two seasons created by hand in the live console: `2027` (the real one) and `phone-tests` (7–30 Nov 2026 Athens time, a temporary season so we can test on real phones now). The December test run still gets its own season once the dates are set.
+- **Next:** Billis joins first, then tests A–D on real phones in `phone-tests`. After that: corrected time, Results/Recap, admin mode, `create-season`/`wipe`.
 
 ---
 

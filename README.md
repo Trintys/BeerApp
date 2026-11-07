@@ -126,6 +126,17 @@ No install-guide screen: Billis installs the PWA on everyone's phone himself.
 - Mockups: [Figma file](https://www.figma.com/design/NAijoLEYKs1I2LcChjM8Pg).
 - Details get decided screen by screen. Mockups get made in Figma before development.
 
+#### Counter screen: where the design stands (Nov 2026)
+Each Figma page is one round of exploration (`Counter – v2` … `Counter – v9`).
+- **Top half: settled (v6).** The countdown ("● 57 days left", amber dot), the big shared total in Bricolage Grotesque ExtraBold, and "beers. all of us." underneath. It's a Figma component (`Counter / Top half (v6)`) that every later version reuses unchanged.
+- **The + button: being explored, not decided yet.**
+  - Requirements we've agreed on: minimal (one object, nothing fancy), **yellow/amber in the bottom half**, and it has to feel logical (a big obvious target, feedback on touch-down, the action on release). On release there's a **"clack" sound together with a beer "+1" pop**. The sound is optional on iPhone (see "Phone limitations"), so the visual pop alone must feel complete. Slide your finger off to cancel, and a calmer version for reduced motion.
+  - v7 tried 8 abstract buttons (keycap, tally clicker, cheers, beer tap, coaster, cap jar, stamp, glass pill). Conclusion: the button should be **the product itself**.
+  - v8 tried 8 product buttons (2 each: glass face down, draft tap/lever, glass, can). Favourite: **the beer mug** (v8 Press 6).
+  - **v9 (current): 20 variations of the mug**, each a clickable Figma prototype. Press makes the mug sink and squash a little. Release makes it **wiggle left and right, beer drops and foam spill out on both sides onto the ground**, the "+1 🍺" pops up, and it resets. The variations change one or two things each: mug shape, foam, how the + looks, beer colour, what it stands on, how far it wiggles, how many drops spill.
+  - Next step: pick a favourite (or mix the best parts) from v9, then update this section with the final choice.
+- Shared pieces in Figma: the `Beer pop` component (amber "+1" with a small mug), and each button as a component set with its states (Rest, Pressed, Wiggle left, Wiggle right, Spill, Settle in v9).
+
 ---
 
 ## Phone limitations to design around
@@ -162,3 +173,4 @@ These are things a home-screen web app can and can't do. Check here before desig
 - **Reveal & notification mechanism**: a temporary choice is in place (see "Reveal & notification"). The goal of a true one-click is to be revisited later. It doesn't affect screens or data structure.
 - **Build plan** ([`docs/PLAN.md`](docs/PLAN.md)): drafted, needs review from both of us.
 - **App name on the home screen and icon.** We'll design them with the screens.
+- **Counter + button design**: narrowed to a beer mug that wiggles and spills (see "Counter screen: where the design stands"). The final variant still has to be picked from Figma v9.

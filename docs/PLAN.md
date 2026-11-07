@@ -226,7 +226,8 @@ These are additions, not swaps, and are now listed in the README's stack.
   - Data layer `src/data/` with a real (Firebase) and a fake backend; logic in `src/lib/` with unit tests (passing).
   - Plain screens: Join, Starts in…, Counter. Checked in a browser with the fake backend: joining, the Latin-only check and the live total all work.
 - **7 Nov, later:** rule tests run and passing; fixed a bug found on the emulator (right after joining, the app asked for members-only data before the server had confirmed the join, and the live listeners gave up for good). Now it waits for the confirmation, and listeners retry after an error.
-- **Next:** deploy rules + app to the live project, then tests A–D on real phones. After that: corrected time, Results/Recap, admin mode, `create-season`/`wipe`.
+- **7 Nov, evening:** shorter invite link (`/j/<code>`, 10-character code). Rules and app **deployed** to the live project (https://happynewbeeer.web.app); invite created in the console.
+- **Next:** season documents in the live database (nothing to tap on until one exists), Billis joins first, then tests A–D on real phones. After that: corrected time, Results/Recap, admin mode, `create-season`/`wipe`.
 
 ---
 

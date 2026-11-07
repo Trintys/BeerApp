@@ -199,6 +199,13 @@ These are things a home-screen web app can and can't do. Check here before desig
 
 The emulator uses a demo project (`demo-happy-new-beer`), so local work can never touch the live data.
 
+### Deploying (live project)
+1. `npx firebase login` once (with the project owner's Google account).
+2. Security rules: `npx firebase deploy --only firestore:rules` (run `npm run test:rules` first).
+3. App: `npm run build`, then `npx firebase deploy --only hosting`. Live at **https://happynewbeeer.web.app**.
+
+Invite codes live only in the Firebase console (`invites` collection), never in the repo.
+
 ### Where things are
 - `firestore.rules`: all security. Every rule has a test in `tests/rules/`.
 - `src/data/`: the data layer. Screens only talk to `backend` and the hooks (`useSession`, `useSeasons`, `usePeople`, `useNow`). `firebaseBackend.ts` is the real one, `fakeBackend.ts` the fake one, `backend.ts` picks one.

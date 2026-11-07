@@ -162,7 +162,7 @@ The recap counts taps from the log, so it stays correct even if the live total h
 
 Both are local scripts using the Admin SDK, with the key kept on Billis's laptop and out of git:
 
-- `scripts/wipe`: deletes the test season's taps and recap, and the test people and devices.
+- `scripts/wipe`: deletes test-run data before the real season. **What exactly it deletes is undecided** (see README "Open decisions"); we settle it once testing ends.
 - `scripts/create-season` (agreed): creates season documents ahead of time (the test season and the coming years), so each new year starts by itself at midnight with nothing to press.
 
 Invite codes are created by hand in the console, so they never touch the repo.
@@ -228,7 +228,11 @@ These are additions, not swaps, and are now listed in the README's stack.
 - **7 Nov, later:** rule tests run and passing; fixed a bug found on the emulator (right after joining, the app asked for members-only data before the server had confirmed the join, and the live listeners gave up for good). Now it waits for the confirmation, and listeners retry after an error.
 - **7 Nov, evening:** shorter invite link (`/j/<code>`, 10-character code). Rules and app **deployed** to the live project (https://happynewbeeer.web.app); invite created in the console.
 - **7 Nov, night:** two seasons created by hand in the live console: `2027` (the real one) and `phone-tests` (7–30 Nov 2026 Athens time, a temporary season so we can test on real phones now). The December test run still gets its own season once the dates are set.
-- **Next:** Billis joins first, then tests A–D on real phones in `phone-tests`. After that: corrected time, Results/Recap, admin mode, `create-season`/`wipe`.
+- **Next:** Billis joins first, then tests A–D on real phones in `phone-tests`.
+- **Still missing in the live build** (known, not bugs):
+  - **Admin mode and Google sign-in** aren't built, so the admin account ID in `firestore.rules` is still a placeholder. For now Billis joins through the invite link like everyone else.
+  - **No install prompt.** Install with the browser's "Add to Home Screen". This matches the README (no install-guide screen; Billis installs it on each phone).
+- **After that:** corrected time, Results/Recap, admin mode, `create-season`/`wipe`.
 
 ---
 

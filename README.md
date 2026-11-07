@@ -227,3 +227,4 @@ Invite codes live only in the Firebase console (`invites` collection), never in 
 - **App name on the home screen and icon.** We'll design them with the screens.
 - **Counter + button design**: a beer mug that clinks and spills (see "Counter screen: where the design stands"). The direction still has to be picked from Figma v10/v11. Not blocking development.
 - **Test run dates**: December 2026, exact dates to be set.
+- **What `wipe` deletes**: decide once testing ends. Test taps never mix with 2027 (taps belong to one season), but people and devices are shared across seasons. One idea, not decided: delete the test seasons with their taps and recaps, plus every person and device except a keep-list, so testers who aren't in the group (e.g. a co-developer) disappear without hand removal and anyone can rejoin with the link.

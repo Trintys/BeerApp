@@ -6,6 +6,8 @@ It will never go on an app store. It's a web app (PWA) installed to each phone's
 
 This file is the single source of truth for what we've decided. If you want to change a decision, discuss it first and update this file. Don't just change it in code.
 
+**Working together:** two of us (and our AI agents) build this in parallel, with no fixed owners: anyone can pick up any part. The repo keeps everyone on the same page: decisions live here, the build plan in [`docs/PLAN.md`](docs/PLAN.md), and work goes through short-lived branches and pull requests.
+
 ---
 
 ## Stack
@@ -14,7 +16,7 @@ This file is the single source of truth for what we've decided. If you want to c
 |---|---|
 | App | React + TypeScript, built with Vite |
 | Installable app | `vite-plugin-pwa` (icon, fullscreen, offline shell) |
-| Database | Firebase Firestore (live total, tap log, seasons) |
+| Database | Firebase Firestore (live total, tap log, seasons), location **`eur3` (Europe)**; can't be changed after creation |
 | Identity | Firebase Anonymous Auth + a display name |
 | Hosting | Firebase Hosting (free `*.web.app` address) |
 | Server-side safety | Firestore security rules |
@@ -29,10 +31,11 @@ Cost: €0 (Firebase Spark plan). Only a Google account is needed.
 ## How it works (v1)
 
 ### Seasons
-- One **season** = one calendar year. The first real season is **all of 2027**, ending **23:59 on 31/12/2027, Greek time (Europe/Athens)** for everyone.
-- The admin (Billis) starts a season manually with a **Start** button.
-- It's meant to repeat every year if the group likes it.
-- **Test run before 2027:** we'll run it with the group in December 2026. Test data gets wiped before the real season with a local script (`wipe`, see "Reveal & notification").
+- One **season** = one calendar year, from **00:00 on 1/1 to 23:59:59 on 31/12, Greek time (Europe/Athens)** for everyone. The first real season is **all of 2027**.
+- **Seasons start automatically every year.** There is no Start button: at midnight on 1 January the new season begins by itself and the counter starts again from 0. Nobody has to be online for it.
+- A tap always belongs to the season whose dates contain its tap time. So there is never an overlap: a beer at 23:58 on 31/12 counts for the old year, a beer at 00:05 on 1/1 for the new one.
+- The old year's results come later, when the admin presses **Reveal** (see "End of year"). Until then everyone just keeps tapping in the new year.
+- **Test run before 2027:** in **December 2026** with the group (exact dates still to be set). It's a separate test season with its own dates. Test data gets wiped before the real season with a local script (`wipe`, see "Reveal & notification").
 
 ### Joining
 - Joining requires a **secret invite link** (`.../join?code=<long random code>`). Without the code you can't join. The **server checks the code** (via security rules), not just the UI.
@@ -40,7 +43,8 @@ Cost: €0 (Firebase Spark plan). Only a Google account is needed.
 - **Rejoining / new phone:** open the invite link again and type the same name, and you're logged in as your existing user, so your stats don't split.
   - Names are normalised before comparing (trimmed, case-insensitive), so "Nikos", "nikos" and "Nikos " are the same person.
   - Known trade-off: anyone with the link who types an existing name becomes that person. That's acceptable for a private group of friends.
-- The admin can see who has joined and remove people.
+- The admin can see who has joined (in admin mode).
+- **Removing a person is not an app feature.** In the rare case it's needed (e.g. a stranger got the link), the admin does it by hand in the Firebase console and **removes everything that comes with them**: the person, their devices and all their taps, and lowers the total to match. If they still have the invite link, change the invite code too.
 - The admin (Billis) signs in with Google in admin mode; his account can't be reclaimed by typing his name.
 - No real auth (passwords/accounts) for now.
 
@@ -65,13 +69,14 @@ Cost: €0 (Firebase Spark plan). Only a Google account is needed.
 - It gets more dramatic towards the end (hours in the last days, a big ticking clock in the final hour, a takeover at midnight).
 
 ### End of year
-1. **23:59:59 on 31/12 (Athens):** the season ends. Even offline, the app locks the + button at midnight (using corrected time) and shows **"Year's over, wait for your recap"**. No way to tap after midnight.
-2. **Grace period:** offline phones that come back online sync their pre-midnight taps.
+1. **23:59:59 on 31/12 (Athens):** the season ends and the next one starts automatically. Even offline, the app switches at midnight (using corrected time): the total starts again from 0 for the new year, and the counter shows a small **"2027 recap coming soon"** note until the reveal. Taps after midnight count for the new year. There's no way to add a tap to the old year after midnight.
+2. **Grace period:** offline phones that come back online sync their pre-midnight taps to the old season.
 3. **Reveal:** once everyone has synced (e.g. the morning of 1 January), Billis presses **Reveal** in admin mode (see "Reveal & notification" below). It:
    - marks the season as revealed, which is the **hard cutoff**: from then on the server rejects every tap for that season, including late-syncing ones. If your phone was off for that long, too bad.
    - calculates the recap once from the tap log and saves it, so the recap is a **frozen snapshot** that never changes after people have seen it.
    - is followed by a **push notification** to everyone saying the recap is ready (sent from the Firebase console for now).
 4. The app shows the **Wrapped-style reveal**: final total, leaderboards and personal stats (e.g. biggest night, most active hour, longest streak, first beer of the year).
+5. Afterwards, every past season's recap stays available in a **Results** tab. The counter always shows the current year, so for everyone except the admin there is no overlap between seasons.
 
 Notification permission is granted during the initial phone setup, and each phone's notification subscription is saved so the sender can reach it.
 
@@ -79,7 +84,7 @@ Notification permission is granted during the initial phone setup, and each phon
 The Firestore security rules accept a tap only if:
 - the user has joined (valid invite) and the tap is under their own ID
 - it's exactly one beer (+1)
-- the tap time is **within the season** (start ≤ tap time ≤ 23:59:59 31/12 Athens)
+- the tap time is **within the season it's filed under** (00:00 1/1 ≤ tap time ≤ 23:59:59 31/12 Athens)
 - the tap time is **not in the future** compared to server time (small allowance for clock drift)
 - the season is **not yet revealed**
 
@@ -111,10 +116,10 @@ Whatever is chosen: **no secret key ever goes in the app or the repo.**
 ## Screens (v1)
 
 1. **Join**: name field + button (only reachable through the invite link).
-2. **Waiting to start**: shown before the admin presses Start. Others see "Waiting for the admin to start" plus who has joined; the admin sees the Start button.
-3. **Counter**: the main screen. Big shared total, a big + button and a small countdown. This is 95% of the app.
-4. **Wait for your recap**: from midnight on 31/12 until the reveal. The + button is gone.
-5. **Recap**: the Wrapped-style reveal.
+2. **Starts in…**: shown only when no season is running yet (e.g. between the test run and 1 January 2027). A countdown to the start plus who has joined. No Start button: the season starts on its own.
+3. **Counter**: the main screen. Big shared total, a big + button and a small countdown. This is 95% of the app. Between midnight on 31/12 and the reveal it also shows a small "recap coming soon" note for the old year.
+4. **Recap**: the Wrapped-style reveal, shown when a season is revealed.
+5. **Results**: a tab with the recaps of all past seasons.
 
 No install-guide screen: Billis installs the PWA on everyone's phone himself.
 
@@ -124,7 +129,7 @@ No install-guide screen: Billis installs the PWA on everyone's phone himself.
 - **Light mode only**, on a white base, with a bit of glass (frosted, light-catching surfaces like newer iOS). It's a personal app with its own character, not a copy of Apple's apps.
 - Follows Apple-style design principles: feedback on touch-down, spring motion, and a calmer version for phones with reduced motion turned on.
 - Mockups: [Figma file](https://www.figma.com/design/NAijoLEYKs1I2LcChjM8Pg).
-- Details get decided screen by screen. Mockups get made in Figma before development.
+- Details get decided screen by screen in Figma. **Development doesn't wait for the designs:** we build an MVP with plain screens first and apply each design when it's picked.
 
 #### Counter screen: where the design stands (Nov 2026)
 Each Figma page is one round of exploration (`Counter – v2` … `Counter – v9`).
@@ -134,7 +139,9 @@ Each Figma page is one round of exploration (`Counter – v2` … `Counter – v
   - v7 tried 8 abstract buttons (keycap, tally clicker, cheers, beer tap, coaster, cap jar, stamp, glass pill). Conclusion: the button should be **the product itself**.
   - v8 tried 8 product buttons (2 each: glass face down, draft tap/lever, glass, can). Favourite: **the beer mug** (v8 Press 6).
   - **v9 (current): 20 variations of the mug**, each a clickable Figma prototype. Press makes the mug sink and squash a little. Release makes it **wiggle left and right, beer drops and foam spill out on both sides onto the ground**, the "+1 🍺" pops up, and it resets. The variations change one or two things each: mug shape, foam, how the + looks, beer colour, what it stands on, how far it wiggles, how many drops spill.
-  - Next step: pick a favourite (or mix the best parts) from v9, then update this section with the final choice.
+  - **v10: 11 graphic styles of the same mug** (flat, clay 3D, liquid glass, ink sketch, pixel art, retro cartoon, neo-brutalist, low-poly, soft focus, paper cut, real glass). Same interaction in all: press, then a "clink" (tips left, rebounds right), foam flies out on both sides, "+1" pops, reset. Learning: changing only the surface keeps them looking alike (same front-on, emoji-like silhouette).
+  - **v11: viewpoint and silhouette.** 6 vector variants (top-down, three-quarter with sloshing foam, hero low angle, woodcut tankard, abstract jelly, Swiss top-down) and 3 photoreal ones from AI-generated images (3/4, top-down, hero close-up). Each has its own motion; the depth press (shrinks into the screen, shadow tightens) appears in Mug 11 (v10) and the photo variants.
+  - Next step: let v10 and v11 sit for a while, then pick a direction (or mix) and update this section with the final choice. States since v10: Rest, Pressed, Clink, Rebound, Spill, Settle.
 - Shared pieces in Figma: the `Beer pop` component (amber "+1" with a small mug), and each button as a component set with its states (Rest, Pressed, Wiggle left, Wiggle right, Spill, Settle in v9).
 
 ---
@@ -171,6 +178,7 @@ These are things a home-screen web app can and can't do. Check here before desig
 ## Open decisions
 
 - **Reveal & notification mechanism**: a temporary choice is in place (see "Reveal & notification"). The goal of a true one-click is to be revisited later. It doesn't affect screens or data structure.
-- **Build plan** ([`docs/PLAN.md`](docs/PLAN.md)): drafted, needs review from both of us.
+- **Build plan** ([`docs/PLAN.md`](docs/PLAN.md)): the blocking decisions in its section 1 were settled on 7 Nov 2026 and are written into this README. Its proposed additions (section 7, plus accent-stripping, `create-season` and the clock-risk wording) still need a yes from both of us.
 - **App name on the home screen and icon.** We'll design them with the screens.
-- **Counter + button design**: narrowed to a beer mug that wiggles and spills (see "Counter screen: where the design stands"). The final variant still has to be picked from Figma v9.
+- **Counter + button design**: a beer mug that clinks and spills (see "Counter screen: where the design stands"). The direction still has to be picked from Figma v10/v11. Not blocking development.
+- **Test run dates**: December 2026, exact dates to be set.

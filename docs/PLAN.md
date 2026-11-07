@@ -1,6 +1,6 @@
 # Build plan
 
-**Status: draft, needs review from both of us.** It covers how we build what `README.md` describes. The README stays the source of truth: if the two disagree, the README wins until we agree a change and update it.
+**Status: section 1 decided on 7 Nov 2026 (and written into the README). Sections 7 and 8, accent-stripping and `create-season` are still proposals that need a yes from both of us.** It covers how we build what `README.md` describes. The README stays the source of truth: if the two disagree, the README wins until we agree a change and update it.
 
 **Goal:** the test run with the group in December 2026, then the real season from 1 January 2027.
 
@@ -8,16 +8,16 @@
 
 ## 1. Decide first
 
-These block or shape the work. Each has a recommendation, so a quick "yes" is enough.
+Decided on 7 Nov 2026. The README has the details.
 
-| # | Question | Recommendation |
+| # | Question | Decision |
 |---|---|---|
-| 1 | Who owns which track? (see section 6) | One person on Firebase, one on UI |
-| 2 | Do Figma mockups block development? The README wants them first, but there are only about 4 weeks to the test run. | Build the logic now with plain screens. Make mockups in parallel and apply them as they're ready. |
-| 3 | When does the season start? If Start sets the start time, Billis needs signal right at midnight on New Year's Eve, and earlier beers don't count. | Billis presses Start any time beforehand, and taps count from a fixed `startsAt` of 00:00 on 1 January. The counter screen shows "starts in…" until then. |
-| 4 | What happens to a removed person's taps? | They stay in the total but the person is left out of leaderboards |
-| 5 | What dates does the test run use? | Start 1 December, end 20 December, reveal the next day, wipe by 28 December |
-| 6 | Which Firestore location? **This can't be changed after creation.** | A European location, since everyone's in Greece |
+| 1 | Who owns which track? | **No fixed owners.** Either of us (or our agents) can pick up any task. The repo keeps everyone on the same page: decisions in the README, the plan here, work through branches and pull requests. |
+| 2 | Do Figma mockups block development? | **No.** We build an MVP with plain screens now and apply the designs when they're picked. |
+| 3 | When does the season start? | **Automatically, every year.** A season is a fixed calendar year (00:00 1/1 to 23:59:59 31/12, Athens). No Start button. At midnight the new season starts by itself; the old one waits for Reveal, and its recap then lives in a Results tab. |
+| 4 | What happens to a removed person's taps? | **Removal isn't an app feature.** In the rare case it's needed, the admin removes the person **and everything that comes with them** (devices, taps, their share of the total) by hand in the Firebase console. |
+| 5 | What dates does the test run use? | **December 2026**, exact dates still to be set. |
+| 6 | Which Firestore location? | **`eur3` (Europe)**. |
 
 ---
 
@@ -43,14 +43,14 @@ Tests A to D need real phones, so do them on a bare deployed app rather than on 
 invites/{code}                       no client can read this; created by hand in the console
 
 people/{personId}                    one per human; personId is the normalised name
-  displayName, joinedAt, removed
+  displayName, joinedAt
   reserved                           true for Billis, so nobody can claim the name
 
 devices/{uid}                        one per Firebase login; only its owner and the admin can read it
   personId, inviteCode, fcmToken
 
 seasons/{seasonId}                   e.g. "test-2026", "2027"; the one document phones listen to
-  status                             waiting | active | closed | revealed
+  status                             open | closed | revealed
   startsAt, endsAt
   total, lastTapId
 
@@ -81,14 +81,14 @@ Trim, collapse repeated spaces and lower-case, as the README says. We also sugge
 ### Join
 
 1. Sign in anonymously.
-2. Create `devices/{uid}` with the normalised name and the invite code. The rules check that the invite exists and that the person isn't reserved or removed.
+2. Create `devices/{uid}` with the normalised name and the invite code. The rules check that the invite exists and that the person isn't reserved.
 3. If `people/{personId}` doesn't exist, create it. If someone else created it first, treat them as the same person.
 
 This order means someone without the code can't read anything, including who has joined.
 
 ### Tap
 
-Each tap is one **batched write**, because batches queue offline and transactions don't:
+Each tap is filed under the season whose dates contain its `tappedAt`, and is one **batched write**, because batches queue offline and transactions don't:
 
 1. Create the tap with `tappedAt` (corrected time) and `serverAt` (`serverTimestamp()`).
 2. Update the season with `total: increment(1)` and `lastTapId: <this tap's ID>`.
@@ -113,7 +113,7 @@ match /seasons/{seasonId}/taps/{tapId} {
     && request.resource.data.personId == myDevice().personId
     && request.resource.data.uid == request.auth.uid
     && request.resource.data.serverAt == request.time
-    && season().status == 'active'
+    && season().status == 'open'
     && request.resource.data.tappedAt >= season().startsAt
     && request.resource.data.tappedAt < season().endsAt
     && request.resource.data.tappedAt <= request.time + duration.value(5, 'm')
@@ -121,7 +121,7 @@ match /seasons/{seasonId}/taps/{tapId} {
 }
 ```
 
-`isMember()` means the caller has a device whose person isn't removed. `isAdmin()` compares against Billis's Google account ID, which isn't a secret and can be committed in the rules file.
+`isMember()` means the caller has a device document (a removed person's documents are deleted by hand). `isAdmin()` compares against Billis's Google account ID, which isn't a secret and can be committed in the rules file.
 
 ### Corrected time
 
@@ -139,10 +139,9 @@ There's no router. The screen comes from the state:
 | State | Screen |
 |---|---|
 | No device document | Join |
-| `status == waiting` | Waiting to start |
-| `active` and before `endsAt` | Counter |
-| After `endsAt`, or `closed` | Wait for your recap |
-| `revealed` | Recap |
+| No season contains the current (corrected) time | Starts in… (countdown to the next season) |
+| A season contains the current time | Counter, plus a "recap coming soon" note while the previous season isn't revealed yet |
+| A season got revealed that this phone hasn't shown yet | Recap, once; after that it's in the Results tab |
 
 ### Reveal
 
@@ -161,7 +160,7 @@ The recap counts taps from the log, so it stays correct even if the live total h
 Both are local scripts using the Admin SDK, with the key kept on Billis's laptop and out of git:
 
 - `scripts/wipe`: deletes the test season's taps and recap, and the test people and devices.
-- `scripts/create-season`: creates the season document. This is a small addition to the README, which only mentions `wipe`.
+- `scripts/create-season`: creates season documents ahead of time (the test season and the coming years), so each new year starts by itself at midnight with nothing to press. This is a small addition to the README, which only mentions `wipe`.
 
 Invite codes are created by hand in the console, so they never touch the repo.
 
@@ -175,8 +174,8 @@ Invite codes are created by hand in the console, so they never touch the repo.
 | 12–18 Nov | **Core:** join, rejoin, security rules, counter, live total | Two phones see each other's taps live, and the rule tests pass |
 | 19–25 Nov | **Season logic:** offline queue, corrected time, admin screen, countdown, midnight lock | A short fake season runs to its end with one phone in airplane mode |
 | 26–30 Nov | **Finish line:** Reveal, basic recap, `wipe`, install on all 6 phones | A full fake season runs from Start through recap and wipe |
-| 1–20 Dec | **Test run with the group** | Real use, with problems fixed as they appear |
-| 21 Dec | **Test the reveal** | Reveal and push work for everyone |
+| December (dates TBD) | **Test run with the group** | Real use, with problems fixed as they appear |
+| Right after the test run | **Test the reveal** | Reveal and push work for everyone |
 | 22–28 Dec | **Polish and reset:** full recap, fixes, wipe | The real season is created and test data is gone |
 | 1 Jan 2027 | **Real season starts** | |
 
@@ -186,7 +185,7 @@ Invite codes are created by hand in the console, so they never touch the repo.
 
 ## 6. Splitting the work
 
-We both agree section 3 before writing code, since both tracks depend on it. After that:
+There are no fixed owners: either of us (or our agents) can pick up any task, and the tracks below are just a way to group the work. We both agree section 3 before writing code, since everything depends on it.
 
 | Track | Covers |
 |---|---|
@@ -221,5 +220,6 @@ These are additions, not swaps. Nothing in the README's stack changes.
 - **Tap times can be faked in general.** The rules only check that a time is within the season and not in the future. Same reasoning: it's a friend group.
 - **iPhone can clear stored data.** If it does, queued taps are lost and the person must rejoin. Test D checks normal use, but this can't be ruled out entirely.
 - **Removing a tap by hand takes two edits.** Delete the tap and lower `total` by one, both in the console.
+- **Removing a person by hand takes several edits.** Delete their taps, devices and person document, and lower `total` by their number of taps. If they still have the invite link, change the invite code.
 - **Billis has to sign in with Google on his phone** so his taps and admin rights share one account. This depends on test C.
 - **Free-plan reads.** Each open phone uses one read per tap by anyone, which is nowhere near the daily limit. The recap's full read happens only at Reveal.

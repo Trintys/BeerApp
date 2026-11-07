@@ -119,7 +119,11 @@ Whatever is chosen: **no secret key ever goes in the app or the repo.**
 No install-guide screen: Billis installs the PWA on everyone's phone himself.
 
 ### Look & feel
-- **Reactive, goofy, over-the-top.** Lots of immersion for a very simple app is the joke.
+- **Subtle, minimal visuals; the fun is in the tap.** Clean screens, one accent colour, lots of space. The entertainment comes from the interactions, not decoration.
+- **Tactile, slightly 3D elements.** The + button presses down into its base, and small things (a "+1", bubbles, a sticker) pop out on tap.
+- **Light mode only**, on a white base, with a bit of glass (frosted, light-catching surfaces like newer iOS). It's a personal app with its own character, not a copy of Apple's apps.
+- Follows Apple-style design principles: feedback on touch-down, spring motion, and a calmer version for phones with reduced motion turned on.
+- Mockups: [Figma file](https://www.figma.com/design/NAijoLEYKs1I2LcChjM8Pg).
 - Details get decided screen by screen. Mockups get made in Figma before development.
 
 ---
@@ -132,7 +136,7 @@ These are things a home-screen web app can and can't do. Check here before desig
 |---|---|---|---|
 | Sync while app is closed | ❌ No Background Sync | ✅ | Sync on next app open (queue in IndexedDB/local storage) |
 | Live updates while open | ✅ | ✅ | Use freely |
-| Animations / visual effects | ✅ | ✅ | **Main source of goofiness** |
+| Animations / visual effects | ✅ | ✅ | **Main source of fun** (tap interactions) |
 | Vibration | ⚠️ No `navigator.vibrate`; works via the hidden `<input type="checkbox" switch>` trick (Safari 17.4+). It's a hack and could break | ✅ `navigator.vibrate` | Use on both (e.g. `web-haptics` library), but **nothing may depend on it** |
 | Sound | ⚠️ Muted by the silent switch unless `navigator.audioSession.type = 'playback'`; reported iOS 26 bug where Web Audio in home-screen apps only works on first run | ✅ | **Optional.** Nice-to-have only |
 | Push notifications | ⚠️ Only when installed to the home screen, and permission must be asked from a tap | ✅ | Grant during setup; FCM, sent from the Firebase console for now; **test early on an iPhone in the EU** |

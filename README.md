@@ -39,7 +39,7 @@ Cost: €0 (Firebase Spark plan). Only a Google account is needed. The Firebase 
 - **Test run before 2027:** in **December 2026** with the group (exact dates still to be set). It's a separate test season with its own dates. Test data gets wiped before the real season with a local script (`wipe`, see "Reveal & notification").
 
 ### Joining
-- Joining requires a **secret invite link** (`.../join?code=<long random code>`). Without the code you can't join. The **server checks the code** (via security rules), not just the UI.
+- Joining requires a **secret invite link** (`happynewbeeer.web.app/j/<code>`, a random 10-character code). Without the code you can't join. The **server checks the code** (via security rules), not just the UI.
 - On join you type your name. Nothing else.
 - **Rejoining / new phone:** open the invite link again and type the same name, and you're logged in as your existing user, so your stats don't split.
   - **Names use Latin letters only** (the Join screen refuses Greek or other scripts), so "Nikos" and "Νίκος" can't become two people.
@@ -188,10 +188,10 @@ These are things a home-screen web app can and can't do. Check here before desig
 
 | Command | What it does |
 |---|---|
-| `npm run dev:fake` | App with fake in-memory data, no Firebase at all. Friends "tap" every few seconds. Quickest way to work on screens. Open `http://localhost:5173/join?code=anything`. |
+| `npm run dev:fake` | App with fake in-memory data, no Firebase at all. Friends "tap" every few seconds. Quickest way to work on screens. Open `http://localhost:5173/j/anything`. |
 | `npm run emulators` | Starts a local Firebase (Auth + Firestore) on your laptop. UI at `http://localhost:4000`. Leave it running. |
 | `npm run emulators:seed` | With the emulators running: adds an invite code (`dev-invite`), a season running now, the 2027 season and Billis as the reserved admin. |
-| `npm run dev` | App against the local emulators. Join at `http://localhost:5173/join?code=dev-invite`. A phone on the same Wi-Fi can open `http://<laptop-ip>:5173/…` too. |
+| `npm run dev` | App against the local emulators. Join at `http://localhost:5173/j/dev-invite`. A phone on the same Wi-Fi can open `http://<laptop-ip>:5173/…` too. |
 | `npm test` | Unit tests (names, seasons and Athens time, countdown). |
 | `npm run test:rules` | Security-rule tests. Starts the Firestore emulator by itself, runs `tests/rules`, stops it. |
 | `npm run build` | Type-checks and builds the installable app into `dist/` (talks to the **live** project). |
@@ -209,7 +209,7 @@ The emulator uses a demo project (`demo-happy-new-beer`), so local work can neve
 - `src/config/firebase.ts`: the live project's web config. Public, safe to commit.
 
 ### Firebase project
-- Project ID **`happynewbeeer`** (three e's; it can't be renamed). If we want a cleaner app address than `happynewbeeer.web.app`, we add a second Hosting site with its own name (free).
+- Project ID **`happynewbeeer`** (three e's; it can't be renamed). The app's address stays **`happynewbeeer.web.app`** (decided 7 Nov 2026). The invite link is `happynewbeeer.web.app/j/<code>`; the code itself is kept only in the Firebase console, never in the repo.
 - Placeholders to fill in later: the admin's account ID in `firestore.rules` (`adminUid()`, after Billis's first Google sign-in), and the app name and icon in `vite.config.ts` and `public/icons/`.
 
 ---

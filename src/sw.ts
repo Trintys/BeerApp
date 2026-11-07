@@ -12,7 +12,7 @@ declare const self: ServiceWorkerGlobalScope
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
-// Any page (e.g. /join?code=…) opens the cached app when offline.
+// Any page (e.g. an invite link /j/<code>) opens the cached app when offline.
 registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')))
 
 // A new version takes over as soon as it's installed.

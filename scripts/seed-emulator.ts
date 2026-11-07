@@ -1,5 +1,5 @@
 // Fills the local Emulator with what you need to try the app:
-//   - an invite code, so you can join at http://localhost:5173/join?code=dev-invite
+//   - an invite code, so you can join at http://localhost:5173/j/dev-invite
 //   - a "dev" season running from today for 57 days, and the 2027 season
 //   - Billis as the reserved admin person
 //
@@ -37,4 +37,4 @@ for (const season of seasons) {
 }
 await db.doc('people/billis').set({ displayName: 'Billis', joinedAt: Timestamp.now(), reserved: true })
 
-console.log(`Seeded the Emulator. Join at http://localhost:5173/join?code=${INVITE_CODE}`)
+console.log(`Seeded the Emulator. Join at http://localhost:5173/j/${INVITE_CODE}`)

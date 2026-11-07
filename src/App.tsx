@@ -27,7 +27,8 @@ export function App() {
   )
 }
 
-/** The invite link is `…/join?code=<code>`. */
+/** The invite link is `…/j/<code>` (the older `…/join?code=<code>` works too). */
 function inviteCodeFromUrl(): string | null {
-  return new URLSearchParams(location.search).get('code')
+  const shortLink = location.pathname.match(/^\/j\/([A-Za-z0-9-]+)\/?$/)
+  return shortLink?.[1] ?? new URLSearchParams(location.search).get('code')
 }

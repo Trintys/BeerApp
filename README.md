@@ -6,7 +6,7 @@ It will never go on an app store. It's a web app (PWA) installed to each phone's
 
 This file is the single source of truth for what we've decided. If you want to change a decision, discuss it first and update this file. Don't just change it in code.
 
-**Working together:** two of us (and our AI agents) build this in parallel, with no fixed owners: anyone can pick up any part. The repo keeps everyone on the same page: decisions live here, the build plan in [`docs/PLAN.md`](docs/PLAN.md), and work goes through short-lived branches and pull requests.
+**Working together:** two of us (and our AI agents) build this in parallel, with no fixed owners: anyone can pick up any part. The repo keeps everyone on the same page: decisions live here, the build plan in [`docs/PLAN.md`](docs/PLAN.md), and for now we commit straight to `main` (branches and pull requests come later, once many things happen in parallel). **AI agents only commit locally and never push or open pull requests unless told to**; a human reviews and pushes.
 
 ---
 
@@ -20,8 +20,9 @@ This file is the single source of truth for what we've decided. If you want to c
 | Identity | Firebase Anonymous Auth + a display name |
 | Hosting | Firebase Hosting (free `*.web.app` address) |
 | Server-side safety | Firestore security rules |
+| Dev tools | Firebase Emulator Suite (local Firebase for running and testing), `@firebase/rules-unit-testing` (security-rule tests), Vitest (time, season, name and stats logic), `vite-plugin-pwa` in `injectManifest` mode (one hand-written service worker for offline and push) |
 
-Cost: €0 (Firebase Spark plan). Only a Google account is needed.
+Cost: €0 (Firebase Spark plan). Only a Google account is needed. The Firebase project is created under **Billis's Google account**, the same one he uses as admin.
 
 **Why not native / Expo:** getting a native app onto iPhones without the App Store means €99/year or relying on someone else's Apple developer account, plus extra install steps. A PWA installs once in about 20 seconds per phone.
 **Why not Supabase:** free projects pause after a week of low activity, and this app has long quiet stretches.
@@ -32,7 +33,7 @@ Cost: €0 (Firebase Spark plan). Only a Google account is needed.
 
 ### Seasons
 - One **season** = one calendar year, from **00:00 on 1/1 to 23:59:59 on 31/12, Greek time (Europe/Athens)** for everyone. The first real season is **all of 2027**.
-- **Seasons start automatically every year.** There is no Start button: at midnight on 1 January the new season begins by itself and the counter starts again from 0. Nobody has to be online for it.
+- **Seasons start automatically every year.** There is no Start button: at midnight on 1 January the new season begins by itself and the counter starts again from 0. Nobody has to be online for it. (How: a local script, `create-season`, creates the season records for the coming years in advance.)
 - A tap always belongs to the season whose dates contain its tap time. So there is never an overlap: a beer at 23:58 on 31/12 counts for the old year, a beer at 00:05 on 1/1 for the new one.
 - The old year's results come later, when the admin presses **Reveal** (see "End of year"). Until then everyone just keeps tapping in the new year.
 - **Test run before 2027:** in **December 2026** with the group (exact dates still to be set). It's a separate test season with its own dates. Test data gets wiped before the real season with a local script (`wipe`, see "Reveal & notification").
@@ -41,6 +42,7 @@ Cost: €0 (Firebase Spark plan). Only a Google account is needed.
 - Joining requires a **secret invite link** (`.../join?code=<long random code>`). Without the code you can't join. The **server checks the code** (via security rules), not just the UI.
 - On join you type your name. Nothing else.
 - **Rejoining / new phone:** open the invite link again and type the same name, and you're logged in as your existing user, so your stats don't split.
+  - **Names use Latin letters only** (the Join screen refuses Greek or other scripts), so "Nikos" and "Νίκος" can't become two people.
   - Names are normalised before comparing (trimmed, case-insensitive), so "Nikos", "nikos" and "Nikos " are the same person.
   - Known trade-off: anyone with the link who types an existing name becomes that person. That's acceptable for a private group of friends.
 - The admin can see who has joined (in admin mode).
@@ -63,6 +65,7 @@ Cost: €0 (Firebase Spark plan). Only a Google account is needed.
 ### Corrected time (used for the lock and the countdown)
 - Whenever the app is online, it measures the **offset between the phone's clock and server time** and saves it on the phone.
 - All time logic (tap times, the midnight lock, the countdown) uses `phone clock + last saved offset`, so it keeps working offline and a wrong or changed phone clock doesn't matter.
+  - Accepted gap: someone who changes their clock while offline could still fake tap times. We trust users in v1, so we don't guard against it.
 
 ### Countdown
 - The counter screen shows a small countdown to the end of the season under the total ("57 days left"), so it doesn't clutter the screen.
@@ -178,7 +181,6 @@ These are things a home-screen web app can and can't do. Check here before desig
 ## Open decisions
 
 - **Reveal & notification mechanism**: a temporary choice is in place (see "Reveal & notification"). The goal of a true one-click is to be revisited later. It doesn't affect screens or data structure.
-- **Build plan** ([`docs/PLAN.md`](docs/PLAN.md)): the blocking decisions in its section 1 were settled on 7 Nov 2026 and are written into this README. Its proposed additions (section 7, plus accent-stripping, `create-season` and the clock-risk wording) still need a yes from both of us.
 - **App name on the home screen and icon.** We'll design them with the screens.
 - **Counter + button design**: a beer mug that clinks and spills (see "Counter screen: where the design stands"). The direction still has to be picked from Figma v10/v11. Not blocking development.
 - **Test run dates**: December 2026, exact dates to be set.

@@ -1,6 +1,6 @@
 # Build plan
 
-**Status: section 1 decided on 7 Nov 2026 (and written into the README). Sections 7 and 8, accent-stripping and `create-season` are still proposals that need a yes from both of us.** It covers how we build what `README.md` describes. The README stays the source of truth: if the two disagree, the README wins until we agree a change and update it.
+**Status: agreed on 7 Nov 2026** (decisions are written into the README). It covers how we build what `README.md` describes. The README stays the source of truth: if the two disagree, the README wins until we agree a change and update it.
 
 **Goal:** the test run with the group in December 2026, then the real season from 1 January 2027.
 
@@ -72,7 +72,7 @@ timeSync/{uid}                       used only to measure the clock offset
 
 ### Name normalising
 
-Trim, collapse repeated spaces and lower-case, as the README says. We also suggest **stripping Greek accents**, so "Νίκος" and "Νικος" are the same person. This goes slightly beyond the README, so update it if agreed. Latin and Greek spellings ("Nikos" and "Νίκος") stay different people.
+**Latin letters only** (agreed): the Join screen refuses Greek or other scripts, and the rules reject a `personId` with anything outside the allowed characters. Then trim, collapse repeated spaces and lower-case, as the README says.
 
 ---
 
@@ -160,7 +160,7 @@ The recap counts taps from the log, so it stays correct even if the live total h
 Both are local scripts using the Admin SDK, with the key kept on Billis's laptop and out of git:
 
 - `scripts/wipe`: deletes the test season's taps and recap, and the test people and devices.
-- `scripts/create-season`: creates season documents ahead of time (the test season and the coming years), so each new year starts by itself at midnight with nothing to press. This is a small addition to the README, which only mentions `wipe`.
+- `scripts/create-season` (agreed): creates season documents ahead of time (the test season and the coming years), so each new year starts by itself at midnight with nothing to press.
 
 Invite codes are created by hand in the console, so they never touch the repo.
 
@@ -196,15 +196,16 @@ The split point is a small `src/data/` layer: hooks like `useSeason()` and funct
 
 Working habits:
 
-- Short-lived branches and pull requests into `main`.
-- Changes to `firestore.rules` get a passing test in the same pull request.
-- Agreed changes go into the README in the same pull request.
+- For now we commit straight to `main`; branches and pull requests come once many things happen in parallel.
+- AI agents only commit locally. They never push or open pull requests unless told to; a human pushes.
+- Changes to `firestore.rules` get a passing test in the same commit.
+- Agreed changes go into the README in the same commit.
 
 ---
 
-## 7. Proposed additions
+## 7. Dev tools (agreed)
 
-These are additions, not swaps. Nothing in the README's stack changes.
+These are additions, not swaps, and are now listed in the README's stack.
 
 | Addition | Why |
 |---|---|
@@ -216,7 +217,7 @@ These are additions, not swaps. Nothing in the README's stack changes.
 
 ## 8. Known risks
 
-- **Changing the phone's clock while offline can still fool the lock.** The README says a changed clock doesn't matter, but this only holds while the app can re-measure the offset. Offline, someone could set their clock back and keep tapping after midnight, and the server would accept those taps until Reveal. We accept this for a group of friends, and the README should be reworded.
+- **Changing the phone's clock while offline can still fool the lock.** The README says a changed clock doesn't matter, but this only holds while the app can re-measure the offset. Offline, someone could set their clock back and keep tapping after midnight, and the server would accept those taps until Reveal. Accepted: we trust users in v1, and the README notes the gap.
 - **Tap times can be faked in general.** The rules only check that a time is within the season and not in the future. Same reasoning: it's a friend group.
 - **iPhone can clear stored data.** If it does, queued taps are lost and the person must rejoin. Test D checks normal use, but this can't be ruled out entirely.
 - **Removing a tap by hand takes two edits.** Delete the tap and lower `total` by one, both in the console.

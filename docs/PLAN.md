@@ -12,7 +12,7 @@ Decided on 7 Nov 2026. The README has the details.
 
 | # | Question | Decision |
 |---|---|---|
-| 1 | Who owns which track? | **No fixed owners.** Either of us (or our agents) can pick up any task. The repo keeps everyone on the same page: decisions in the README, the plan here, work through branches and pull requests. |
+| 1 | Who owns which track? | **No fixed owners.** Either of us (or our agents) can pick up any task. The repo keeps everyone on the same page: decisions in the README, the plan here. For now we commit straight to `main`. |
 | 2 | Do Figma mockups block development? | **No.** We build an MVP with plain screens now and apply the designs when they're picked. |
 | 3 | When does the season start? | **Automatically, every year.** A season is a fixed calendar year (00:00 1/1 to 23:59:59 31/12, Athens). No Start button. At midnight the new season starts by itself; the old one waits for Reveal, and its recap then lives in a Results tab. |
 | 4 | What happens to a removed person's taps? | **Removal isn't an app feature.** In the rare case it's needed, the admin removes the person **and everything that comes with them** (devices, taps, their share of the total) by hand in the Firebase console. |
@@ -32,6 +32,9 @@ Each of these could change the design, so test them before building on top of th
 | C | **Google sign-in in the installed iPhone app** | Popup and redirect sign-in are known to be unreliable in home-screen apps. | Try setting `authDomain` to our `*.web.app` address, then discuss other ways to identify the admin |
 | D | **Offline survival on iPhone and Android** | Taps must survive closing the app and restarting the phone with no signal. | Discuss a separate queue of our own in IndexedDB |
 | E | **Security rules in the emulator** | The tap and counter rules in section 3 rely on two writes checking each other. | Rethink how the total is stored |
+
+**Results so far**
+- **E:** rules and tests written (7 Nov), **not run yet**: the AI sandbox can't download the Firestore Emulator. First person with Java 21 installed: run `npm run test:rules` and write the result here.
 
 Tests A to D need real phones, so do them on a bare deployed app rather than on the dev machine.
 
@@ -215,7 +218,18 @@ These are additions, not swaps, and are now listed in the README's stack.
 
 ---
 
-## 8. Known risks
+## 8. Progress
+
+- **7 Nov 2026, Foundations part 1 (done, local commits):**
+  - Project set up: Vite + React + TypeScript, `vite-plugin-pwa` (injectManifest, `src/sw.ts`), Firebase SDK, Vitest, Emulator config. Commands are in the README ("Development").
+  - `firestore.rules`: joining with an invite, Latin-only names, reserved admin name, taps (+1 only, own name, inside the season's dates, not in the future, season still open), Reveal steps (admin only), recap, time sync. Tests in `tests/rules` (not run yet, see test E).
+  - Data layer `src/data/` with a real (Firebase) and a fake backend; logic in `src/lib/` with unit tests (passing).
+  - Plain screens: Join, Starts in…, Counter. Checked in a browser with the fake backend: joining, the Latin-only check and the live total all work.
+- **Next:** run the rule tests and try `npm run dev` against the emulator (needs Java 21), deploy rules + app to the live project, then tests A–D on real phones. After that: corrected time, Results/Recap, admin mode, `create-season`/`wipe`.
+
+---
+
+## 9. Known risks
 
 - **Changing the phone's clock while offline can still fool the lock.** The README says a changed clock doesn't matter, but this only holds while the app can re-measure the offset. Offline, someone could set their clock back and keep tapping after midnight, and the server would accept those taps until Reveal. Accepted: we trust users in v1, and the README notes the gap.
 - **Tap times can be faked in general.** The rules only check that a time is within the season and not in the future. Same reasoning: it's a friend group.

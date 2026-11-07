@@ -1,0 +1,219 @@
+rules_version = '2';
+
+// Security rules for Happy New Beer.
+//
+// Security lives here, not in the app: anything a client must not be able to do
+// is blocked by these rules. The decisions behind them are in README.md
+// ("Joining", "Tapping", "Server rules for taps", "Reveal & notification") and the
+// data model is in docs/PLAN.md section 3. Every rule has a test in tests/rules.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------- helpers
+
+    // Billis's Google account ID (the admin). Not a secret.
+    // TODO: replace after Billis's first Google sign-in (Firebase console →
+    // Security → Authentication → Users → User UID). Until then nobody is admin.
+    function adminUid() {
+      return 'ADMIN_UID_NOT_SET';
+    }
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.uid == adminUid();
+    }
+
+    function invitePath(code) {
+      return /databases/$(database)/documents/invites/$(code);
+    }
+
+    function devicePath(uid) {
+      return /databases/$(database)/documents/devices/$(uid);
+    }
+
+    function personPath(personId) {
+      return /databases/$(database)/documents/people/$(personId);
+    }
+
+    function seasonPath(seasonId) {
+      return /databases/$(database)/documents/seasons/$(seasonId);
+    }
+
+    function tapPath(seasonId, tapId) {
+      return /databases/$(database)/documents/seasons/$(seasonId)/taps/$(tapId);
+    }
+
+    function recapPath(seasonId) {
+      return /databases/$(database)/documents/seasons/$(seasonId)/recap/final;
+    }
+
+    // A member is anyone with a device document. Removing a person is done by
+    // hand in the console by deleting their documents (README "Joining").
+    function isMember() {
+      return signedIn() && exists(devicePath(request.auth.uid));
+    }
+
+    function myDevice() {
+      return get(devicePath(request.auth.uid)).data;
+    }
+
+    // Person IDs are normalised names: Latin letters only, lower case, single
+    // spaces between words, at most 24 characters (README "Joining").
+    function isValidPersonId(personId) {
+      return personId is string
+        && personId.size() <= 24
+        && personId.matches('^[a-z]+( [a-z]+)*$');
+    }
+
+    // A reserved person (Billis) can't be claimed by typing their name.
+    function isReserved(personId) {
+      return exists(personPath(personId))
+        && get(personPath(personId)).data.get('reserved', false) == true;
+    }
+
+    // ---------------------------------------------------------------- invites
+
+    // Invite codes are created by hand in the console and never readable by
+    // clients. The rules below only check whether a code exists.
+    match /invites/{code} {
+      allow read, write: if false;
+    }
+
+    // ---------------------------------------------------------------- devices
+
+    // One document per Firebase login. Joining = creating your device document
+    // with a valid invite code (the admin needs no invite).
+    match /devices/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['personId', 'inviteCode'])
+        && isValidPersonId(request.resource.data.personId)
+        && (isAdmin() || (
+              request.resource.data.inviteCode is string
+              && exists(invitePath(request.resource.data.inviteCode))
+              && !isReserved(request.resource.data.personId)
+            ));
+
+      // Only the push token may change later (for "recap ready" notifications).
+      allow update: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fcmToken']);
+
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------------- people
+
+    // One document per human; the document ID is the normalised name.
+    match /people/{personId} {
+      allow read: if isMember();
+
+      // Created right after joining, for your own device's person only.
+      // Only the admin may mark a person as reserved (his own).
+      allow create: if isMember()
+        && myDevice().personId == personId
+        && request.resource.data.keys().hasOnly(['displayName', 'joinedAt', 'reserved'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.lower() == personId
+        && request.resource.data.joinedAt == request.time
+        && (!('reserved' in request.resource.data)
+            || (isAdmin() && request.resource.data.reserved == true));
+
+      allow update, delete: if false;
+    }
+
+    // ---------------------------------------------------------------- seasons
+
+    // Season documents are created ahead of time by scripts/create-season
+    // (Admin SDK, which bypasses these rules). Clients never create or delete them.
+    match /seasons/{seasonId} {
+      allow read: if isMember();
+      allow create, delete: if false;
+
+      // A tap: the total goes up by exactly one, and the tap document named in
+      // lastTapId is created in the same batch (checked again on the tap itself).
+      function isTapUpdate() {
+        return isMember()
+          && resource.data.status == 'open'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['total', 'lastTapId'])
+          && request.resource.data.total == resource.data.total + 1
+          && !exists(tapPath(seasonId, request.resource.data.lastTapId))
+          && existsAfter(tapPath(seasonId, request.resource.data.lastTapId));
+      }
+
+      // Reveal, admin only, in order: open → closed (hard cutoff) → revealed
+      // (together with the frozen recap). See docs/PLAN.md "Reveal".
+      function isRevealStep() {
+        return isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && (
+            (resource.data.status == 'open' && request.resource.data.status == 'closed')
+            || (resource.data.status == 'closed'
+                && request.resource.data.status == 'revealed'
+                && existsAfter(recapPath(seasonId)))
+          );
+      }
+
+      allow update: if isTapUpdate() || isRevealStep();
+
+      // ------------------------------------------------------------ taps
+
+      // One document = one beer. Only the admin can read them, so personal
+      // counts stay hidden until the reveal (README "Tapping").
+      match /taps/{tapId} {
+        function season() {
+          return get(seasonPath(seasonId)).data;
+        }
+
+        allow read: if isAdmin();
+
+        allow create: if isMember()
+          && request.resource.data.keys().hasOnly(['personId', 'uid', 'tappedAt', 'serverAt'])
+          && request.resource.data.personId == myDevice().personId
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.serverAt == request.time
+          && request.resource.data.tappedAt is timestamp
+          && season().status == 'open'
+          && request.resource.data.tappedAt >= season().startsAt
+          && request.resource.data.tappedAt < season().endsAt
+          && request.resource.data.tappedAt <= request.time + duration.value(5, 'm')
+          && getAfter(seasonPath(seasonId)).data.lastTapId == tapId
+          && getAfter(seasonPath(seasonId)).data.total == season().total + 1;
+
+        allow update, delete: if false;
+      }
+
+      // ------------------------------------------------------------ recap
+
+      // Written once by the admin's Reveal, never changed, readable by members
+      // once the season is revealed.
+      match /recap/{docId} {
+        allow read: if isMember() && get(seasonPath(seasonId)).data.status == 'revealed';
+
+        allow create: if isAdmin()
+          && docId == 'final'
+          && getAfter(seasonPath(seasonId)).data.status == 'revealed';
+
+        allow update, delete: if false;
+      }
+    }
+
+    // ---------------------------------------------------------------- time sync
+
+    // Used only to measure the phone's clock offset (README "Corrected time"):
+    // write the server time, read it back.
+    match /timeSync/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['at'])
+        && request.resource.data.at == request.time;
+    }
+  }
+}

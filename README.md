@@ -178,6 +178,42 @@ These are things a home-screen web app can and can't do. Check here before desig
 
 ---
 
+## Development
+
+### First-time setup
+1. Install **Node.js** (LTS) and **Java 21** (the Firebase Emulator needs Java).
+2. In the repo: `npm install`. The Firebase CLI comes with it, so use `npx firebase …` (no global install needed).
+
+### Everyday commands
+
+| Command | What it does |
+|---|---|
+| `npm run dev:fake` | App with fake in-memory data, no Firebase at all. Friends "tap" every few seconds. Quickest way to work on screens. Open `http://localhost:5173/join?code=anything`. |
+| `npm run emulators` | Starts a local Firebase (Auth + Firestore) on your laptop. UI at `http://localhost:4000`. Leave it running. |
+| `npm run emulators:seed` | With the emulators running: adds an invite code (`dev-invite`), a season running now, the 2027 season and Billis as the reserved admin. |
+| `npm run dev` | App against the local emulators. Join at `http://localhost:5173/join?code=dev-invite`. A phone on the same Wi-Fi can open `http://<laptop-ip>:5173/…` too. |
+| `npm test` | Unit tests (names, seasons and Athens time, countdown). |
+| `npm run test:rules` | Security-rule tests. Starts the Firestore emulator by itself, runs `tests/rules`, stops it. |
+| `npm run build` | Type-checks and builds the installable app into `dist/` (talks to the **live** project). |
+| `npm run lint` | Lint. |
+
+The emulator uses a demo project (`demo-happy-new-beer`), so local work can never touch the live data.
+
+### Where things are
+- `firestore.rules`: all security. Every rule has a test in `tests/rules/`.
+- `src/data/`: the data layer. Screens only talk to `backend` and the hooks (`useSession`, `useSeasons`, `usePeople`, `useNow`). `firebaseBackend.ts` is the real one, `fakeBackend.ts` the fake one, `backend.ts` picks one.
+- `src/lib/`: plain logic with unit tests: `names.ts`, `seasons.ts` (Athens time, which season a moment belongs to), `countdown.ts`, `clock.ts` (corrected time).
+- `src/screens/`: one file per screen. `src/App.tsx` picks the screen from the state.
+- `src/sw.ts`: the service worker (offline now, push later).
+- `scripts/`: local scripts. `seed-emulator.ts` for now; `create-season` and `wipe` come later.
+- `src/config/firebase.ts`: the live project's web config. Public, safe to commit.
+
+### Firebase project
+- Project ID **`happynewbeeer`** (three e's; it can't be renamed). If we want a cleaner app address than `happynewbeeer.web.app`, we add a second Hosting site with its own name (free).
+- Placeholders to fill in later: the admin's account ID in `firestore.rules` (`adminUid()`, after Billis's first Google sign-in), and the app name and icon in `vite.config.ts` and `public/icons/`.
+
+---
+
 ## Open decisions
 
 - **Reveal & notification mechanism**: a temporary choice is in place (see "Reveal & notification"). The goal of a true one-click is to be revisited later. It doesn't affect screens or data structure.

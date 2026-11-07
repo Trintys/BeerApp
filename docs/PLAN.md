@@ -38,6 +38,36 @@ Each of these could change the design, so test them before building on top of th
 
 Tests A to D need real phones, so do them on a bare deployed app rather than on the dev machine.
 
+### Test sessions (live app, season `phone-tests`)
+
+Further sessions reuse the `phone-tests` season. Add each one here.
+
+**Session 1: 7 Nov 2026, 22:42–22:48 (first official test).** 3 people: Billis (Android), Pavlos (iPhone), Triantafyllos (iPhone). Everyone opened the invite link in the browser; nobody installed it to the home screen.
+- Joining from the link worked for all 3, one device each, first tap within 4 seconds of joining.
+- 24 taps (Billis 20, Pavlos 1, Triantafyllos 3); the season total is 24 and the database holds exactly 24 taps. Bursts of up to 6 taps in about 2 seconds were neither dropped nor doubled.
+- All taps accepted by the rules and filed under `phone-tests` with the right person.
+- **Live total confirmed on all 3 phones** (each saw the others' taps arrive).
+- Every tap reached the server within 1 second of being tapped, so nothing was tapped offline.
+- Noticed: the name is stored exactly as typed (Billis appears as "billis"). Matching ignores case, so it works, but it shows in lowercase. Possible fix (not decided): capitalise the first letter on save.
+- Noticed: "billis" isn't reserved in the live database yet (that comes with admin mode), so anyone with the link could join as Billis. Fine while only testers have the link.
+
+### Cases still to test
+
+Keep adding to this list as new cases come up; tick them off in a test session.
+- **A:** install to the home screen on an iPhone and join there (does the installed app keep the invite?).
+- **A:** rejoin with the same name on a second phone or browser, and after clearing the browser's data; check the person isn't split in two.
+- **B:** push notification on an iPhone in the EU (installed app).
+- **C:** Google sign-in in the installed iPhone app (needs admin mode).
+- **D:** tap offline (airplane mode), close the app, reopen with signal; on both iPhone and Android, also after a phone restart.
+- Install on Android and check it opens fullscreen and works the same.
+- Two people tapping at the exact same moment (already fine in bursts from one phone; check across phones).
+- Wrong or missing invite code on the live app is refused.
+- A Greek or non-Latin name is refused on a real phone keyboard.
+- App left open in the background for a long time, then reopened: the total catches up.
+- Bad or switching signal (Wi-Fi to mobile data) mid-tapping.
+- Phone with a wrong clock (set a few minutes off): taps still accepted and filed in the right season (needs corrected time).
+- Season boundaries: a tap just before and after a season's end (do it on a short dedicated test season).
+
 ---
 
 ## 3. Data model
@@ -228,7 +258,8 @@ These are additions, not swaps, and are now listed in the README's stack.
 - **7 Nov, later:** rule tests run and passing; fixed a bug found on the emulator (right after joining, the app asked for members-only data before the server had confirmed the join, and the live listeners gave up for good). Now it waits for the confirmation, and listeners retry after an error.
 - **7 Nov, evening:** shorter invite link (`/j/<code>`, 10-character code). Rules and app **deployed** to the live project (https://happynewbeeer.web.app); invite created in the console.
 - **7 Nov, night:** two seasons created by hand in the live console: `2027` (the real one) and `phone-tests` (7–30 Nov 2026 Athens time, a temporary season so we can test on real phones now). The December test run still gets its own season once the dates are set.
-- **Next:** Billis joins first, then tests A–D on real phones in `phone-tests`.
+- **7 Nov, 22:42–22:48: test session 1** on the live app (3 people, 2 iPhones and 1 Android, in the browser). Joining, tapping and the live total all worked. Results and the list of cases still to test are in section 2.
+- **Next:** more test sessions in `phone-tests` (installing to the home screen, offline, rejoining; see "Cases still to test").
 - **Still missing in the live build** (known, not bugs):
   - **Admin mode and Google sign-in** aren't built, so the admin account ID in `firestore.rules` is still a placeholder. For now Billis joins through the invite link like everyone else.
   - **No install prompt.** Install with the browser's "Add to Home Screen". This matches the README (no install-guide screen; Billis installs it on each phone).

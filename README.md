@@ -144,8 +144,10 @@ Each Figma page is one round of exploration (`Counter – v2` … `Counter – v
   - **v9 (current): 20 variations of the mug**, each a clickable Figma prototype. Press makes the mug sink and squash a little. Release makes it **wiggle left and right, beer drops and foam spill out on both sides onto the ground**, the "+1 🍺" pops up, and it resets. The variations change one or two things each: mug shape, foam, how the + looks, beer colour, what it stands on, how far it wiggles, how many drops spill.
   - **v10: 11 graphic styles of the same mug** (flat, clay 3D, liquid glass, ink sketch, pixel art, retro cartoon, neo-brutalist, low-poly, soft focus, paper cut, real glass). Same interaction in all: press, then a "clink" (tips left, rebounds right), foam flies out on both sides, "+1" pops, reset. Learning: changing only the surface keeps them looking alike (same front-on, emoji-like silhouette).
   - **v11: viewpoint and silhouette.** 6 vector variants (top-down, three-quarter with sloshing foam, hero low angle, woodcut tankard, abstract jelly, Swiss top-down) and 3 photoreal ones from AI-generated images (3/4, top-down, hero close-up). Each has its own motion; the depth press (shrinks into the screen, shadow tightens) appears in Mug 11 (v10) and the photo variants.
-  - Next step: let v10 and v11 sit for a while, then pick a direction (or mix) and update this section with the final choice. States since v10: Rest, Pressed, Clink, Rebound, Spill, Settle.
-- Shared pieces in Figma: the `Beer pop` component (amber "+1" with a small mug), and each button as a component set with its states (Rest, Pressed, Wiggle left, Wiggle right, Spill, Settle in v9).
+  - **v12: ink shapes.** The v10 ink-sketch mug (Mug 4) was the favourite style, so v12 keeps that style and motion on 8 different vessels: nonic pint, tulip, weizen, lidded stein, longneck bottle, beer boot, keg, pilsner. The "+1" is redrawn in ink too (`Beer pop / Ink`). **Rising bubbles** (from the pilsner) are liked and are on every glass vessel.
+  - Next step: Billis runs v12 by the group, then we pick a direction and update this section with the final choice. States since v10: Rest, Pressed, Clink, Rebound, Spill, Settle.
+  - The reasoning behind these rounds (what was liked, what was rejected and why, the rule for the button metaphor) is in [`docs/DESIGN-NOTES.md`](docs/DESIGN-NOTES.md).
+- Shared pieces in Figma: the `Beer pop` component (amber "+1" with a small mug; `Beer pop / Ink` for the v12 ink style), and each button as a component set with its states (Rest, Pressed, Wiggle left, Wiggle right, Spill, Settle in v9).
 
 ---
 
@@ -225,6 +227,6 @@ Invite codes live only in the Firebase console (`invites` collection), never in 
 
 - **Reveal & notification mechanism**: a temporary choice is in place (see "Reveal & notification"). The goal of a true one-click is to be revisited later. It doesn't affect screens or data structure.
 - **App name on the home screen and icon.** We'll design them with the screens.
-- **Counter + button design**: a beer mug that clinks and spills (see "Counter screen: where the design stands"). The direction still has to be picked from Figma v10/v11. Not blocking development.
+- **Counter + button design**: a beer mug that clinks and spills (see "Counter screen: where the design stands"). The direction still has to be picked; current favourite is the v12 ink style with rising bubbles. Not blocking development.
 - **Test run dates**: December 2026, exact dates to be set.
 - **What `wipe` deletes**: decide once testing ends. Test taps never mix with 2027 (taps belong to one season), but people and devices are shared across seasons. One idea, not decided: delete the test seasons with their taps and recaps, plus every person and device except a keep-list, so testers who aren't in the group (e.g. a co-developer) disappear without hand removal and anyone can rejoin with the link.

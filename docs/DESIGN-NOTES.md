@@ -36,3 +36,49 @@ The + button is mandatory. Whatever real-world experience it represents must:
 - Bubbles on all glass ones: Nonic, Tulip, Weizen, Longneck, Beer boot, Pilsner.
 - The "+1" is redrawn in ink: Figma component `Beer pop / Ink` (ink "+1" on an off-register yellow marker blob with burst ticks).
 - Status (8 Nov 2026): Billis is running v12 by the group before picking.
+
+## Other screens: loose wireframes (9 Nov 2026)
+First rough pass at every screen besides the counter's + button. **Layout ideas only, nothing decided** (examples show 1 January 2028, before and after the 2027 reveal): no visual style yet, and the counter's look gets applied once it's picked. They follow "Screens (v1)" and "End of year" in the README; if the README changes, these get redrawn, not kept as old versions.
+
+```
+ 1 · Join               2 · Starts in…          3 · Counter after midnight
++------------------+   +------------------+   +------------------+
+|                  |   | Starts in        |   | ● 364 days    ☰ |
+| Happy New Beer   |   | 21 days          |   | 12               |
+| You're invited.  |   |                  |   | beers. all of us.|
+| What do your     |   | 0                |   |                  |
+| friends call you?|   | beers. all of us.|   | [2027 recap      |
+| [Nikos         ] |   |                  |   |  coming soon]    |
+| [     Join     ] |   | Who's in · 5/6   |   |                  |
+|                  |   | (B)(N)(M)(K)(E)? |   |       [ + ]      |
+| then: allow      |   |                  |   |                  |
+| notifications    |   | (no + button)    |   |                  |
++------------------+   +------------------+   +------------------+
+
+ 4 · Recap (story cards) 5 · My seasons         Admin mode (Billis)
++------------------+   +------------------+   +------------------+
+| ==== ---- ---- --|   | My seasons       |   | Admin · Billis   |
+|                  |   |                  |   | Season 2028      |
+| Together, in     |   | [2027  3,412   >]|   |  running         |
+| 2027, you drank  |   | [2026 test 214 >]|   | Season 2027      |
+| 3,412            |   |                  |   |  ended, syncing  |
+| beers            |   |                  |   | [ Reveal 2027  ] |
+|                  |   |                  |   |  confirm, then   |
+| tap right: next  |   |                  |   |  push via console|
+| tap left: back   |   |                  |   | Who's joined (6) |
+|                  |   |                  |   |  B N M K E A     |
++------------------+   +------------------+   +------------------+
+```
+
+Notes per screen:
+- **1 · Join:** name + Join. Then a separate "allow notifications" step: iPhone only allows the permission request from a tap, so it can't be a popup on load. Done while Billis installs the app on each phone. Edge state still without a screen: opening the app without a valid invite link ("You need an invite link").
+- **2 · Starts in…:** only when no season is running (e.g. between the test run and 1 January 2027). Reuses the counter's top half at 0 with the countdown to the start, so the switch to the counter at midnight feels like the same place coming alive. Joined people pop in live. No + button, no Start button.
+- **3 · Counter after midnight:** the normal counter, already counting the new year from 0, plus a small "2027 recap coming soon" note until the reveal. The note could become the entry point to the recap once it's revealed. ☰ opens the menu: My seasons (+ Admin on Billis's devices).
+- **4 · Recap:** full-screen story cards, Wrapped-style. Rough order: group total → biggest group night → leaderboard → your total → your biggest night / most active hour / longest streak / first beer → shareable summary card. Personal cards after the group ones so the leaderboard builds suspense. Opens from the push notification or the note on the counter.
+- **5 · My seasons:** one row per past season (total + open its recap), from the ☰ menu. Menu vs. tab gets iterated in Figma. The test season could show here too, or be wiped before it does.
+- **Admin mode:** only what the README gives it: Google sign-in, who has joined, and Reveal. Reached through "Admin" in the ☰ menu, shown only on devices signed in as Billis (more than one is fine). Reveal is irreversible, so it needs a strong confirm, then reminds Billis to send the push from the Firebase console. No remove button (removing is done by hand in the Firebase console).
+
+Decided (10 Nov 2026, now also in the README):
+- **My seasons** is reached from a ☰ menu on the counter (working choice; tab vs. menu to be iterated in Figma).
+- **Admin** is an item in the same menu, only for Billis's account, on any of his devices.
+- **Leaderboard** in the recap always shows everyone, full ranking.

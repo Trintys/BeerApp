@@ -78,8 +78,8 @@ Cost: €0 (Firebase Spark plan). Only a Google account is needed. The Firebase 
    - marks the season as revealed, which is the **hard cutoff**: from then on the server rejects every tap for that season, including late-syncing ones. If your phone was off for that long, too bad.
    - calculates the recap once from the tap log and saves it, so the recap is a **frozen snapshot** that never changes after people have seen it.
    - is followed by a **push notification** to everyone saying the recap is ready (sent from the Firebase console for now).
-4. The app shows the **Wrapped-style reveal**: final total, leaderboards and personal stats (e.g. biggest night, most active hour, longest streak, first beer of the year).
-5. Afterwards, every past season's recap stays available in a **Results** tab. The counter always shows the current year, so for everyone except the admin there is no overlap between seasons.
+4. The app shows the **Wrapped-style reveal**: final total, leaderboards (always **everyone**, full ranking: no point hiding stats from the group) and personal stats (e.g. biggest night, most active hour, longest streak, first beer of the year).
+5. Afterwards, every past season's recap stays available under **My seasons** (see "Screens"). The counter always shows the current year, so for everyone except the admin there is no overlap between seasons.
 
 Notification permission is granted during the initial phone setup, and each phone's notification subscription is saved so the sender can reach it.
 
@@ -122,9 +122,13 @@ Whatever is chosen: **no secret key ever goes in the app or the repo.**
 2. **Starts in…**: shown only when no season is running yet (e.g. between the test run and 1 January 2027). A countdown to the start plus who has joined. No Start button: the season starts on its own.
 3. **Counter**: the main screen. Big shared total, a big + button and a small countdown. This is 95% of the app. Between midnight on 31/12 and the reveal it also shows a small "recap coming soon" note for the old year.
 4. **Recap**: the Wrapped-style reveal, shown when a season is revealed.
-5. **Results**: a tab with the recaps of all past seasons.
+5. **My seasons**: the recaps of all past seasons, opened from a menu (☰) on the counter. Menu vs. tab is to be iterated in Figma; the menu is the working choice.
+
+**Admin mode** (not a screen of its own for others): an "Admin" item in the same menu, shown only when signed in with Billis's Google account. It holds who has joined and Reveal. Billis may be signed in as admin on more than one device. How admins work with multiple groups is decided when that version comes (see "Out of scope").
 
 No install-guide screen: Billis installs the PWA on everyone's phone himself.
+
+Loose wireframes of every screen except the counter's + button (layout only, no style) are in [`docs/DESIGN-NOTES.md`](docs/DESIGN-NOTES.md#other-screens-loose-wireframes-9-nov-2026).
 
 ### Look & feel
 - **Subtle, minimal visuals; the fun is in the tap.** Clean screens, one accent colour, lots of space. The entertainment comes from the interactions, not decoration.
@@ -172,7 +176,7 @@ These are things a home-screen web app can and can't do. Check here before desig
 ## Out of scope for v1 (future ideas)
 
 - Each person's year ends at their own local midnight, with results once everyone has passed midnight
-- Multiple friend groups / rooms ("clusters"); if this happens, revisit auth
+- Multiple friend groups / rooms ("clusters"); if this happens, revisit auth and how each group gets its admin
 - Real logins
 - Undo
 - Home-screen widget
@@ -228,5 +232,6 @@ Invite codes live only in the Firebase console (`invites` collection), never in 
 - **Reveal & notification mechanism**: a temporary choice is in place (see "Reveal & notification"). The goal of a true one-click is to be revisited later. It doesn't affect screens or data structure.
 - **App name on the home screen and icon.** We'll design them with the screens.
 - **Counter + button design**: a beer mug that clinks and spills (see "Counter screen: where the design stands"). The direction still has to be picked; current favourite is the v12 ink style with rising bubbles. Not blocking development.
+- **Wireframes for the other screens** (new, 9 Nov 2026): loose layouts in [`docs/DESIGN-NOTES.md`](docs/DESIGN-NOTES.md#other-screens-loose-wireframes-9-nov-2026). Both of us still need to review them.
 - **Test run dates**: December 2026, exact dates to be set.
 - **What `wipe` deletes**: decide once testing ends. Test taps never mix with 2027 (taps belong to one season), but people and devices are shared across seasons. One idea, not decided: delete the test seasons with their taps and recaps, plus every person and device except a keep-list, so testers who aren't in the group (e.g. a co-developer) disappear without hand removal and anyone can rejoin with the link.
